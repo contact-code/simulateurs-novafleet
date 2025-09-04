@@ -1,10 +1,31 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Simulateur RSE — NovaFleet</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inconsolata:wght@400;600&display=swap" rel="stylesheet">
+
+<!-- Anti-blocage Gamma : s'ouvre en plein écran si chargé dans un iframe/proxy.
+     Pour autoriser l'intégration en iframe, appeler l'URL avec ?embed=1 -->
+<script>
+(function () {
+  try {
+    const usp = new URLSearchParams(location.search);
+    if (usp.get('embed') === '1') return; // autoriser l'embed volontaire
+    if (window.top !== window.self) {
+      try { window.top.location.href = location.href + (location.search ? '&' : '?') + 'from=embed'; }
+      catch (e) {
+        var a = document.createElement('a');
+        a.href = location.href + (location.search ? '&' : '?') + 'from=embed';
+        a.target = '_blank'; a.rel = 'noopener';
+        document.body.appendChild(a); a.click();
+      }
+    }
+  } catch(e) {}
+})();
+</script>
+
 <style>
 :root{--bg:#F2F2F2;--ink:#151617;--muted:#8c8f93;--card:#fff;--border:#e6e6e6}
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inconsolata",monospace}
@@ -61,31 +82,40 @@ input{width:100%;padding:11px 12px;border:1px solid #d2d5d9;border-radius:10px;f
 </div>
 
 <script>
-const f1=v=>v.toLocaleString('fr-FR',{maximumFractionDigits:1,minimumFractionDigits:1});
-const f0=v=>v.toLocaleString('fr-FR',{maximumFractionDigits:0});
+const f1 = v => v.toLocaleString('fr-FR', {maximumFractionDigits:1, minimumFractionDigits:1});
+const f0 = v => v.toLocaleString('fr-FR', {maximumFractionDigits:0});
+
 document.getElementById("rseForm").addEventListener("submit", (e)=>{
   e.preventDefault();
-  const ok=(id)=>document.getElementById(id).value.trim();
-  if(!ok('nom')||!ok('email')||!ok('telephone')||!(+document.getElementById('flotte').value>0)){
-    alert("Merci de remplir les champs obligatoires."); return;
+
+  const val = id => document.getElementById(id).value.trim();
+  if (!val('nom') || !val('email') || !val('telephone') || !(+document.getElementById('flotte').value>0)) {
+    alert("Merci de remplir les champs obligatoires.");
+    return;
   }
-  const sin=+document.getElementById("sinistres").value||0;
-  const res=+document.getElementById("restitutions").value||0;
-  const eco=document.getElementById("produitsEco").checked;
+
+  const sin  = +document.getElementById("sinistres").value || 0;
+  const res  = +document.getElementById("restitutions").value || 0;
+  const eco  = document.getElementById("produitsEco").checked;
+
+  // Hypothèses (indicatives) utilisées pour l'estimation
   const G=0.25, bonus=eco?1.05:1, CO2S=120, CO2R=200, WASTE=4, WATER=60;
-  const co2=(sin*CO2S+res*CO2R)*G*bonus;
-  const dechets=(sin*WASTE)*G*bonus;
-  const eau=(sin*WATER)*G;
-  const dossiers=sin+res;
-  const box=document.getElementById("resultat");
-  box.style.display="block";
-  box.innerHTML=`
+
+  const co2      = (sin*CO2S + res*CO2R) * G * bonus; // kg
+  const dechets  = (sin*WASTE) * G * bonus;           // kg
+  const eau      = (sin*WATER) * G;                   // L
+  const dossiers = sin + res;
+
+  const box = document.getElementById("resultat");
+  box.style.display = "block";
+  box.innerHTML = `
     <div class="kv"><div>🌍 <b>CO₂ évité / an</b></div><div>${f1(co2/1000)} t</div></div>
     <div class="kv"><div>🧪 <b>Déchets dangereux évités / an</b></div><div>${f1(dechets)} kg</div></div>
     <div class="kv"><div>💧 <b>Eau économisée / an</b></div><div>${f1(eau)} L</div></div>
     <div class="kv"><div>🤝 <b>Dossiers orientés partenaires engagés</b></div><div>${f0(dossiers)}</div></div>
-    <p class="muted" style="margin-top:10px">Les données issues de ce simulateur sont intégrées dans le rapport RSE consolidé fourni annuellement par NovaFleet.</p>
-  `;
+    <p class="muted" style="margin-top:10px">
+      Les données issues de ce simulateur sont intégrées dans le rapport RSE consolidé fourni annuellement par NovaFleet.
+    </p>`;
 });
 </script>
 </body>

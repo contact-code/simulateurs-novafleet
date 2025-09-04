@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simulateur RSE — NovaFleet</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inconsolata:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F2F2;--ink:#151617;--muted:#8c8f93;--card:#fff;--border:#e6e6e6}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inconsolata",monospace}
+.wrap{max-width:920px;margin:34px auto;padding:0 16px}
+h1{font-family:"Montserrat",system-ui,sans-serif;font-size:clamp(26px,3.6vw,38px);margin:0 0 10px}
+p.sub{color:var(--muted);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin:16px 0}
+label{display:block;margin:12px 0 6px;font-weight:600}
+input{width:100%;padding:11px 12px;border:1px solid #d2d5d9;border-radius:10px;font:inherit}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:740px){ .grid{grid-template-columns:1fr 1fr} }
+.btn{display:inline-block;margin-top:16px;background:#151617;color:#fff;border:0;border-radius:12px;padding:12px 20px;font-weight:700;cursor:pointer}
+.btn.secondary{background:#f7f7f7;color:#111;border:1px solid #e6e6e6}
+.result{margin-top:18px;padding:16px;border-radius:12px;background:#eef5ff;border:1px solid #d7e6ff}
+.kv{display:grid;grid-template-columns:1fr auto;gap:10px;margin:4px 0}
+.muted{color:#8c8f93;font-size:.95em}
+.badge{display:inline-block;font-size:12px;border:1px solid #d0d7de;border-radius:999px;padding:5px 10px;margin-right:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🌱 Simulateur d’Impact RSE NovaFleet</h1>
+  <p class="sub">Évaluez vos gains environnementaux et sociaux. <b>Les données issues de ce simulateur sont intégrées dans le rapport RSE consolidé fourni annuellement par NovaFleet.</b></p>
+
+  <div class="card">
+    <form id="rseForm" novalidate>
+      <div class="grid">
+        <div><label>Nom de l’entreprise *</label><input type="text" id="nom" required placeholder="Entreprise Dupont"></div>
+        <div><label>Nom responsable flotte</label><input type="text" id="respo" placeholder="Prénom Nom"></div>
+        <div><label>Email *</label><input type="email" id="email" required placeholder="contact@exemple.fr"></div>
+        <div><label>Téléphone *</label><input type="tel" id="telephone" required placeholder="+33 6 12 34 56 78"></div>
+        <div><label>Taille de flotte (nb véhicules) *</label><input type="number" id="flotte" min="1" required placeholder="ex : 120"></div>
+        <div><label>Nombre de sinistres / an *</label><input type="number" id="sinistres" min="0" required placeholder="ex : 40"></div>
+        <div><label>Nb restitutions / ventes / an *</label><input type="number" id="restitutions" min="0" required placeholder="ex : 30"></div>
+        <div><label><input type="checkbox" id="produitsEco"> Utilisation de produits respectueux de l’environnement</label></div>
+      </div>
+      <button type="submit" class="btn">Calculer mon impact</button>
+      <a class="btn secondary" href="https://gestion-sinistres-55dwwtu.gamma.site/">⬅️ Retour au site</a>
+    </form>
+
+    <div id="resultat" class="result" style="display:none"></div>
+  </div>
+
+  <div class="card muted">
+    <div class="badge">⚙️ Hypothèses indicatives</div>
+    <div class="badge">🎯 Gains NovaFleet : 20–30%</div>
+    <ul style="margin:10px 0 0 18px">
+      <li><b>CO₂ évité</b> : 120 kg / sinistre, 200 kg / restitution ; réduction 25%.</li>
+      <li><b>Déchets dangereux évités</b> : 4 kg / sinistre ; réduction 25%.</li>
+      <li><b>Eau économisée</b> : 60 L / sinistre ; réduction 30%.</li>
+      <li><b>Produits respectueux</b> : bonus 5% sur CO₂ et déchets si activé.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const f1=v=>v.toLocaleString('fr-FR',{maximumFractionDigits:1,minimumFractionDigits:1});
+const f0=v=>v.toLocaleString('fr-FR',{maximumFractionDigits:0});
+document.getElementById("rseForm").addEventListener("submit", (e)=>{
+  e.preventDefault();
+  const ok=(id)=>document.getElementById(id).value.trim();
+  if(!ok('nom')||!ok('email')||!ok('telephone')||!(+document.getElementById('flotte').value>0)){
+    alert("Merci de remplir les champs obligatoires."); return;
+  }
+  const sin=+document.getElementById("sinistres").value||0;
+  const res=+document.getElementById("restitutions").value||0;
+  const eco=document.getElementById("produitsEco").checked;
+  const G=0.25, bonus=eco?1.05:1, CO2S=120, CO2R=200, WASTE=4, WATER=60;
+  const co2=(sin*CO2S+res*CO2R)*G*bonus;
+  const dechets=(sin*WASTE)*G*bonus;
+  const eau=(sin*WATER)*G;
+  const dossiers=sin+res;
+  const box=document.getElementById("resultat");
+  box.style.display="block";
+  box.innerHTML=`
+    <div class="kv"><div>🌍 <b>CO₂ évité / an</b></div><div>${f1(co2/1000)} t</div></div>
+    <div class="kv"><div>🧪 <b>Déchets dangereux évités / an</b></div><div>${f1(dechets)} kg</div></div>
+    <div class="kv"><div>💧 <b>Eau économisée / an</b></div><div>${f1(eau)} L</div></div>
+    <div class="kv"><div>🤝 <b>Dossiers orientés partenaires engagés</b></div><div>${f0(dossiers)}</div></div>
+    <p class="muted" style="margin-top:10px">Les données issues de ce simulateur sont intégrées dans le rapport RSE consolidé fourni annuellement par NovaFleet.</p>
+  `;
+});
+</script>
+</body>
+</html>

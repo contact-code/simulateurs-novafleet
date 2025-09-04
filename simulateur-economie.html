@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simulateur d'Économies — NovaFleet</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inconsolata:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F2F2;--ink:#151617;--muted:#8c8f93;--card:#fff;--border:#e6e6e6;--brand:#111}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inconsolata",monospace}
+.wrap{max-width:880px;margin:40px auto;padding:0 16px}
+h1{font-family:"Montserrat",system-ui,sans-serif;font-size:clamp(26px,4vw,38px);margin:0 0 12px}
+p.lead{color:var(--muted);margin:0 0 24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px}
+label{font-weight:600;display:block;margin-bottom:6px}
+input{width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;font:inherit}
+input:focus{outline:none;border-color:#aaa}
+.grid{display:grid;gap:16px}
+@media (min-width:760px){.grid-2{grid-template-columns:1fr 1fr}}
+.btn{display:inline-block;padding:12px 18px;border-radius:12px;text-decoration:none;font-weight:700}
+.btn-primary{background:var(--brand);color:#fff;border:1px solid #000}
+.btn-secondary{background:#f7f7f7;color:#333;border:1px solid var(--border)}
+.result{margin-top:24px;display:none}
+.kpis{display:grid;gap:14px}
+@media (min-width:720px){.kpis{grid-template-columns:repeat(3,1fr)}}
+.kpi{background:#fafafa;border:1px dashed var(--border);border-radius:12px;padding:14px;text-align:center}
+.kpi b{font-size:20px}
+.note{margin-top:14px;color:var(--muted);font-size:14px;background:#f7f7f7;border:1px solid var(--border);border-radius:12px;padding:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📊 Simulateur d'Économies NovaFleet</h1>
+  <p class="lead">Estimez vos gains financiers et opérationnels. Les résultats restent affichés (pas de redirection automatique).</p>
+
+  <form id="form-sim" class="card" novalidate>
+    <div class="grid grid-2">
+      <div><label for="company">Nom de l’entreprise *</label><input id="company" required placeholder="Entreprise Dupont"></div>
+      <div><label for="respo">Nom responsable flotte</label><input id="respo" placeholder="Prénom Nom"></div>
+      <div><label for="email">Email *</label><input id="email" type="email" required placeholder="contact@exemple.fr"></div>
+      <div><label for="phone">Téléphone</label><input id="phone" type="tel" placeholder="+33 6 12 34 56 78"></div>
+      <div><label for="fleet">Taille de flotte (nb véhicules) *</label><input id="fleet" type="number" min="1" required placeholder="ex : 120"></div>
+      <div><label for="claims">Nombre de sinistres / an *</label><input id="claims" type="number" min="0" required placeholder="ex : 40"></div>
+      <div><label for="restit">Nb restitutions / ventes / an *</label><input id="restit" type="number" min="0" required placeholder="ex : 30"></div>
+    </div>
+    <p style="margin-top:12px;color:#8c8f93;font-size:14px">* Champs obligatoires</p>
+    <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" type="submit">Calculer mes gains</button>
+      <a class="btn btn-secondary" href="https://gestion-sinistres-55dwwtu.gamma.site/">⬅️ Retour au site</a>
+    </div>
+  </form>
+
+  <section id="result" class="result card">
+    <h2 style="font-family:Montserrat;margin:0 0 12px">Résultats estimatifs</h2>
+    <div class="kpis">
+      <div class="kpi">Économies sinistres<br><b id="kpiSinistres">—</b></div>
+      <div class="kpi">Économies restitutions<br><b id="kpiRestit">—</b></div>
+      <div class="kpi">Total gains<br><b id="kpiTotal">—</b></div>
+    </div>
+    <div class="kpis" style="margin-top:12px">
+      <div class="kpi">Heures gagnées / an<br><b id="kpiHeures">—</b></div>
+      <div class="kpi">Jours évités / an<br><b id="kpiJours">—</b></div>
+      <div class="kpi">Taux appliqués<br><b>+15 % sinistres • +25 % restitutions</b></div>
+    </div>
+    <div style="margin-top:14px"><a class="btn btn-primary" href="https://gestion-sinistres-55dwwtu.gamma.site/">⬅️ Retour au site NovaFleet</a></div>
+    <p class="note">Hypothèses : +15 % sur sinistralité (base 2 000 € HT/sinistre), +25 % sur restitutions (base 1 000 €), 2 h gagnées/sinistre, 1,5 j d’immobilisation évité/sinistre.</p>
+  </section>
+</div>
+<script>
+const form=document.getElementById('form-sim'), box=document.getElementById('result');
+const fmt=n=>n.toLocaleString('fr-FR',{maximumFractionDigits:0});
+form.addEventListener('submit',e=>{
+  e.preventDefault();
+  const req=['company','email','fleet','claims','restit'];
+  for(const id of req){const el=document.getElementById(id); if(!el.value){el.focus(); alert('Merci de remplir les champs obligatoires.'); return;}}
+  const claims=+document.getElementById('claims').value||0;
+  const restit=+document.getElementById('restit').value||0;
+  const gainSin=claims*2000*0.15, gainRes=restit*1000*0.25, total=gainSin+gainRes;
+  const heures=claims*2, jours=claims*1.5;
+  document.getElementById('kpiSinistres').textContent=fmt(gainSin)+' €';
+  document.getElementById('kpiRestit').textContent=fmt(gainRes)+' €';
+  document.getElementById('kpiTotal').textContent=fmt(total)+' €';
+  document.getElementById('kpiHeures').textContent=fmt(heures)+' h';
+  document.getElementById('kpiJours').textContent=fmt(jours)+' j';
+  box.style.display='block'; box.scrollIntoView({behavior:'smooth'});
+});
+</script>
+</body>
+</html>

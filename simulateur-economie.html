@@ -1,10 +1,31 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Simulateur d'Économies — NovaFleet</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inconsolata:wght@400;600&display=swap" rel="stylesheet">
+
+<!-- Anti-blocage Gamma : s'ouvre en plein écran si chargé dans un iframe/proxy.
+     Pour autoriser l'intégration en iframe, appeler l'URL avec ?embed=1 -->
+<script>
+(function () {
+  try {
+    const usp = new URLSearchParams(location.search);
+    if (usp.get('embed') === '1') return; // autoriser l'embed volontaire
+    if (window.top !== window.self) {
+      try { window.top.location.href = location.href + (location.search ? '&' : '?') + 'from=embed'; }
+      catch (e) {
+        var a = document.createElement('a');
+        a.href = location.href + (location.search ? '&' : '?') + 'from=embed';
+        a.target = '_blank'; a.rel = 'noopener';
+        document.body.appendChild(a); a.click();
+      }
+    }
+  } catch(e) {}
+})();
+</script>
+
 <style>
 :root{--bg:#F2F2F2;--ink:#151617;--muted:#8c8f93;--card:#fff;--border:#e6e6e6;--brand:#111}
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inconsolata",monospace}
@@ -31,7 +52,7 @@ input:focus{outline:none;border-color:#aaa}
 <body>
 <div class="wrap">
   <h1>📊 Simulateur d'Économies NovaFleet</h1>
-  <p class="lead">Estimez vos gains financiers et opérationnels. Les résultats restent affichés (pas de redirection automatique).</p>
+  <p class="lead">Estimez vos gains financiers et opérationnels. Les résultats restent affichés.</p>
 
   <form id="form-sim" class="card" novalidate>
     <div class="grid grid-2">
@@ -63,27 +84,41 @@ input:focus{outline:none;border-color:#aaa}
       <div class="kpi">Taux appliqués<br><b>+15 % sinistres • +25 % restitutions</b></div>
     </div>
     <div style="margin-top:14px"><a class="btn btn-primary" href="https://gestion-sinistres-55dwwtu.gamma.site/">⬅️ Retour au site NovaFleet</a></div>
-    <p class="note">Hypothèses : +15 % sur sinistralité (base 2 000 € HT/sinistre), +25 % sur restitutions (base 1 000 €), 2 h gagnées/sinistre, 1,5 j d’immobilisation évité/sinistre.</p>
+    <p class="note">Hypothèses : +15 % (base 2 000 € HT / sinistre), +25 % (base 1 000 € / restitution), 2 h gagnées / sinistre, 1,5 j d’immobilisation évité / sinistre.</p>
   </section>
 </div>
+
 <script>
-const form=document.getElementById('form-sim'), box=document.getElementById('result');
-const fmt=n=>n.toLocaleString('fr-FR',{maximumFractionDigits:0});
-form.addEventListener('submit',e=>{
+const form = document.getElementById('form-sim');
+const box  = document.getElementById('result');
+const fmt  = n => n.toLocaleString('fr-FR', {maximumFractionDigits:0});
+
+form.addEventListener('submit', e => {
   e.preventDefault();
-  const req=['company','email','fleet','claims','restit'];
-  for(const id of req){const el=document.getElementById(id); if(!el.value){el.focus(); alert('Merci de remplir les champs obligatoires.'); return;}}
-  const claims=+document.getElementById('claims').value||0;
-  const restit=+document.getElementById('restit').value||0;
-  const gainSin=claims*2000*0.15, gainRes=restit*1000*0.25, total=gainSin+gainRes;
-  const heures=claims*2, jours=claims*1.5;
-  document.getElementById('kpiSinistres').textContent=fmt(gainSin)+' €';
-  document.getElementById('kpiRestit').textContent=fmt(gainRes)+' €';
-  document.getElementById('kpiTotal').textContent=fmt(total)+' €';
-  document.getElementById('kpiHeures').textContent=fmt(heures)+' h';
-  document.getElementById('kpiJours').textContent=fmt(jours)+' j';
-  box.style.display='block'; box.scrollIntoView({behavior:'smooth'});
+  const req = ['company','email','fleet','claims','restit'];
+  for (const id of req) {
+    const el = document.getElementById(id);
+    if (!el.value) { el.focus(); alert('Merci de remplir les champs obligatoires.'); return; }
+  }
+  const claims = +document.getElementById('claims').value||0;
+  const restit = +document.getElementById('restit').value||0;
+
+  const gainSin = claims*2000*0.15;
+  const gainRes = restit*1000*0.25;
+  const total   = gainSin + gainRes;
+  const heures  = claims*2;
+  const jours   = claims*1.5;
+
+  document.getElementById('kpiSinistres').textContent = fmt(gainSin)+' €';
+  document.getElementById('kpiRestit').textContent    = fmt(gainRes)+' €';
+  document.getElementById('kpiTotal').textContent     = fmt(total)+' €';
+  document.getElementById('kpiHeures').textContent    = fmt(heures)+' h';
+  document.getElementById('kpiJours').textContent     = fmt(jours)+' j';
+
+  box.style.display='block';
+  box.scrollIntoView({behavior:'smooth'});
 });
 </script>
 </body>
 </html>
+

@@ -48,7 +48,10 @@ input{width:100%;padding:11px 12px;border:1px solid #d2d5d9;border-radius:10px;f
 <body>
 <div class="wrap">
   <h1>🌱 Simulateur d’Impact RSE NovaFleet</h1>
-  <p class="sub">Évaluez vos gains environnementaux et sociaux. <b>Les données issues de ce simulateur sont intégrées dans le rapport RSE consolidé fourni annuellement par NovaFleet.</b></p>
+  <p class="sub">
+    Évaluez vos gains environnementaux et sociaux. <b>Avec NovaFleet, l’usage de matériaux & peintures responsables est intégré par défaut</b> (pas de case à cocher).
+    Vos résultats sont consolidés automatiquement dans votre rapport RSE annuel NovaFleet.
+  </p>
 
   <div class="card">
     <form id="rseForm" novalidate>
@@ -60,7 +63,6 @@ input{width:100%;padding:11px 12px;border:1px solid #d2d5d9;border-radius:10px;f
         <div><label>Taille de flotte (nb véhicules) *</label><input type="number" id="flotte" min="1" required placeholder="ex : 120"></div>
         <div><label>Nombre de sinistres / an *</label><input type="number" id="sinistres" min="0" required placeholder="ex : 40"></div>
         <div><label>Nb restitutions / ventes / an *</label><input type="number" id="restitutions" min="0" required placeholder="ex : 30"></div>
-        <div><label><input type="checkbox" id="produitsEco"> Utilisation de produits respectueux de l’environnement</label></div>
       </div>
       <button type="submit" class="btn">Calculer mon impact</button>
       <a class="btn secondary" href="https://gestion-sinistres-55dwwtu.gamma.site/">⬅️ Retour au site</a>
@@ -71,17 +73,18 @@ input{width:100%;padding:11px 12px;border:1px solid #d2d5d9;border-radius:10px;f
 
   <div class="card muted">
     <div class="badge">⚙️ Hypothèses indicatives</div>
-    <div class="badge">🎯 Gains NovaFleet : 20–30%</div>
+    <div class="badge">🎯 Gains NovaFleet : 25–30%</div>
     <ul style="margin:10px 0 0 18px">
-      <li><b>CO₂ évité</b> : 120 kg / sinistre, 200 kg / restitution ; réduction 25%.</li>
-      <li><b>Déchets dangereux évités</b> : 4 kg / sinistre ; réduction 25%.</li>
+      <li><b>CO₂ évité</b> : 120 kg / sinistre, 200 kg / restitution ; réduction 25% (<i>intègre +5% via matériaux/peintures responsables</i>).</li>
+      <li><b>Déchets dangereux évités</b> : 4 kg / sinistre ; réduction 25% (<i>intègre +5%</i>).</li>
       <li><b>Eau économisée</b> : 60 L / sinistre ; réduction 30%.</li>
-      <li><b>Produits respectueux</b> : bonus 5% sur CO₂ et déchets si activé.</li>
+      <li><b>Orientation partenaires</b> : dossiers confiés à des <b>partenaires engagés et mieux rémunérés</b> (valorisation matière, qualité & traçabilité).</li>
     </ul>
   </div>
 </div>
 
 <script>
+// Formatages
 const f1 = v => v.toLocaleString('fr-FR', {maximumFractionDigits:1, minimumFractionDigits:1});
 const f0 = v => v.toLocaleString('fr-FR', {maximumFractionDigits:0});
 
@@ -96,15 +99,24 @@ document.getElementById("rseForm").addEventListener("submit", (e)=>{
 
   const sin  = +document.getElementById("sinistres").value || 0;
   const res  = +document.getElementById("restitutions").value || 0;
-  const eco  = document.getElementById("produitsEco").checked;
 
-  // Hypothèses (indicatives) utilisées pour l'estimation
-  const G=0.25, bonus=eco?1.05:1, CO2S=120, CO2R=200, WASTE=4, WATER=60;
+  // Hypothèses (indicatives) — cohérentes avec 25–30 % de gains avec NovaFleet
+  const G_CO2   = 0.25;   // -25% sur CO2
+  const G_WASTE = 0.25;   // -25% sur déchets dangereux
+  const G_WATER = 0.30;   // -30% sur eau
+  const BONUS   = 1.05;   // +5% intégré par défaut (produits/peintures responsables)
 
-  const co2      = (sin*CO2S + res*CO2R) * G * bonus; // kg
-  const dechets  = (sin*WASTE) * G * bonus;           // kg
-  const eau      = (sin*WATER) * G;                   // L
-  const dossiers = sin + res;
+  // Facteurs de base
+  const CO2S   = 120;   // kg CO2 évités par sinistre avant % (ordre de grandeur)
+  const CO2R   = 200;   // kg CO2 évités par restitution
+  const WASTE  = 4;     // kg déchets dangereux évités / sinistre
+  const WATER  = 60;    // L d'eau économisés / sinistre
+
+  // Calculs (annuels)
+  const co2      = (sin*CO2S + res*CO2R) * G_CO2 * BONUS; // kg
+  const dechets  = (sin*WASTE) * G_WASTE * BONUS;         // kg
+  const eau      = (sin*WATER) * G_WATER;                 // L
+  const dossiers = sin + res;                             // volume confié à l'écosystème engagé
 
   const box = document.getElementById("resultat");
   box.style.display = "block";
@@ -112,7 +124,7 @@ document.getElementById("rseForm").addEventListener("submit", (e)=>{
     <div class="kv"><div>🌍 <b>CO₂ évité / an</b></div><div>${f1(co2/1000)} t</div></div>
     <div class="kv"><div>🧪 <b>Déchets dangereux évités / an</b></div><div>${f1(dechets)} kg</div></div>
     <div class="kv"><div>💧 <b>Eau économisée / an</b></div><div>${f1(eau)} L</div></div>
-    <div class="kv"><div>🤝 <b>Dossiers orientés partenaires engagés</b></div><div>${f0(dossiers)}</div></div>
+    <div class="kv"><div>🤝 <b>Dossiers orientés partenaires engagés et mieux rémunérés</b></div><div>${f0(dossiers)}</div></div>
     <p class="muted" style="margin-top:10px">
       Les données issues de ce simulateur sont intégrées dans le rapport RSE consolidé fourni annuellement par NovaFleet.
     </p>`;
@@ -120,3 +132,4 @@ document.getElementById("rseForm").addEventListener("submit", (e)=>{
 </script>
 </body>
 </html>
+
